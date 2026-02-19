@@ -24,9 +24,41 @@ public class Main {
         try (Connection conn = DriverManager.getConnection(url, user, password)) {
             if (conn != null) {
                 System.out.println("Успешно свързване с Docker Postgres!");
+
+                checkVersion(conn);
+                checkUserCount(conn);
             }
         } catch (SQLException e) {
             System.err.println("Грешка при свързване: " + e.getMessage());
+        }
+    }
+
+    public static void checkVersion(Connection conn) {
+        String sql = "SELECT version()";
+
+        try (var stmt = conn.createStatement();
+             var rs = stmt.executeQuery(sql)) {
+
+            if (rs.next()) {
+                System.out.println("Версия: " + rs.getString(1));
+            }
+        } catch (SQLException e) {
+            System.err.println("Проблем при проверката: " + e.getMessage());
+        }
+    }
+
+
+    public static void checkUserCount(Connection conn) {
+        String sql = "SELECT count(*) FROM pg_stat_activity WHERE backend_type = 'client backend'";
+
+        try (var stmt = conn.createStatement();
+             var rs = stmt.executeQuery(sql)) {
+
+            if (rs.next()) {
+                System.out.println("Брой: " + rs.getString(1));
+            }
+        } catch (SQLException e) {
+            System.err.println("Проблем при проверката: " + e.getMessage());
         }
     }
 }
