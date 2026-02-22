@@ -4,6 +4,7 @@ import io.github.cdimascio.dotenv.Dotenv;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
+
 //TIP To <b>Run</b> code, press <shortcut actionId="Run"/> or
 // click the <icon src="AllIcons.Actions.Execute"/> icon in the gutter.
 public class Main {
@@ -21,19 +22,28 @@ public class Main {
 
         System.out.println("Опит за свързване към: " + url);
 
-        try (Connection conn = DriverManager.getConnection(url, user, password)) {
-            if (conn != null) {
-                System.out.println("Успешно свързване с Docker Postgres!");
+        while (true) {
+            try (Connection conn = DriverManager.getConnection(url, user, password)) {
+                if (conn != null) {
+                    System.out.println("Успешно свързване с Docker Postgres!");
 
-                initializeDatabase(conn);
+                    initializeDatabase(conn);
 
-                String currentVersion = checkVersion(conn);
-                int currentUsers = checkUserCount(conn);
+                    String currentVersion = checkVersion(conn);
+                    int currentUsers = checkUserCount(conn);
 
-                saveHeartbeat(conn, currentUsers, currentVersion);
+                    saveHeartbeat(conn, currentUsers, currentVersion);
+                }
+            } catch (SQLException e) {
+                System.err.println("Грешка при свързване: " + e.getMessage());
             }
-        } catch (SQLException e) {
-            System.err.println("Грешка при свързване: " + e.getMessage());
+
+            try {
+                System.out.println("Изчакване 10 секунди...");
+                Thread.sleep(10000);
+            } catch (InterruptedException e) {
+                break;
+            }
         }
     }
 
