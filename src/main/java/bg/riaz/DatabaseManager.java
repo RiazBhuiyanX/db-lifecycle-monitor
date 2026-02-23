@@ -2,9 +2,37 @@ package bg.riaz;
 
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.sql.DriverManager;
 
 public class DatabaseManager {
-    public String checkVersion(Connection conn) {
+    private final String url;
+    private final String user;
+    private final String password;
+
+    public DatabaseManager(String url, String user, String password) {
+        this.url = url;
+        this.user = user;
+        this.password = password;
+    }
+
+    public void performFullCheck() {
+        try (Connection conn = DriverManager.getConnection(url, user, password)) {
+            if (conn != null) {
+                System.out.println("Успешно свързване с Docker Postgres!");
+
+                initializeDatabase(conn);
+
+                String currentVersion = checkVersion(conn);
+                int currentUsers = checkUserCount(conn);
+
+                saveHeartbeat(conn, currentUsers, currentVersion);
+            }
+        } catch (SQLException e) {
+            System.err.println("Грешка при свързване: " + e.getMessage());
+        }
+    }
+
+    private String checkVersion(Connection conn) {
         String sql = "SELECT version()";
 
         try (var stmt = conn.createStatement();
@@ -22,7 +50,7 @@ public class DatabaseManager {
     }
 
 
-    public int checkUserCount(Connection conn) {
+    private int checkUserCount(Connection conn) {
         String sql = "SELECT count(*) FROM pg_stat_activity WHERE backend_type = 'client backend'";
 
         try (var stmt = conn.createStatement();
@@ -40,7 +68,7 @@ public class DatabaseManager {
     }
 
 
-    public void initializeDatabase(Connection conn) {
+    private void initializeDatabase(Connection conn) {
         String sql = """
             CREATE TABLE IF NOT EXISTS heartbeats (
                 id SERIAL PRIMARY KEY,
@@ -59,7 +87,7 @@ public class DatabaseManager {
         }
     }
 
-    public void saveHeartbeat(Connection conn, int users, String version) {
+    private void saveHeartbeat(Connection conn, int users, String version) {
         String sql = "INSERT INTO heartbeats (active_users, db_version, status) VALUES (?, ?, ?)";
 
         try (var pstmt = conn.prepareStatement(sql)) {

@@ -1,9 +1,6 @@
 package bg.riaz;
 
 import io.github.cdimascio.dotenv.Dotenv;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.SQLException;
 
 //TIP To <b>Run</b> code, press <shortcut actionId="Run"/> or
 // click the <icon src="AllIcons.Actions.Execute"/> icon in the gutter.
@@ -22,23 +19,10 @@ public class Main {
 
         System.out.println("Опит за свързване към: " + url);
 
-        DatabaseManager dbManager = new DatabaseManager();
+        DatabaseManager dbManager = new DatabaseManager(url, user, password);
 
         while (true) {
-            try (Connection conn = DriverManager.getConnection(url, user, password)) {
-                if (conn != null) {
-                    System.out.println("Успешно свързване с Docker Postgres!");
-
-                    dbManager.initializeDatabase(conn);
-
-                    String currentVersion = dbManager.checkVersion(conn);
-                    int currentUsers = dbManager.checkUserCount(conn);
-
-                    dbManager.saveHeartbeat(conn, currentUsers, currentVersion);
-                }
-            } catch (SQLException e) {
-                System.err.println("Грешка при свързване: " + e.getMessage());
-            }
+            dbManager.performFullCheck();
 
             try {
                 System.out.println("Изчакване 10 секунди...");
