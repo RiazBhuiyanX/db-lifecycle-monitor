@@ -32,7 +32,7 @@ public class DatabaseManager {
         }
     }
 
-    private String checkVersion(Connection conn) {
+    public String checkVersion(Connection conn) {
         String sql = "SELECT version()";
 
         try (var stmt = conn.createStatement();
@@ -50,7 +50,7 @@ public class DatabaseManager {
     }
 
 
-    private int checkUserCount(Connection conn) {
+    public int checkUserCount(Connection conn) {
         String sql = "SELECT count(*) FROM pg_stat_activity WHERE backend_type = 'client backend'";
 
         try (var stmt = conn.createStatement();
@@ -87,7 +87,7 @@ public class DatabaseManager {
         }
     }
 
-    private void saveHeartbeat(Connection conn, int users, String version) {
+    public void saveHeartbeat(Connection conn, int users, String version) {
         String sql = "INSERT INTO heartbeats (active_users, db_version, status) VALUES (?, ?, ?)";
 
         try (var pstmt = conn.prepareStatement(sql)) {
