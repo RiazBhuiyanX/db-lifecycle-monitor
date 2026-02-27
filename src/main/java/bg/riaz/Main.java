@@ -8,7 +8,7 @@ public class Main {
     public static void main(String[] args) {
         //TIP Press <shortcut actionId="ShowIntentionActions"/> with your caret at the highlighted text
         // to see how IntelliJ IDEA suggests fixing it.
-        Dotenv dotenv = Dotenv.load();
+        Dotenv dotenv = Dotenv.configure().ignoreIfMissing().load();
 
         String user = dotenv.get("POSTGRES_USER");
         String password = dotenv.get("POSTGRES_PASSWORD");
@@ -18,6 +18,12 @@ public class Main {
         String url = "jdbc:postgresql://localhost:" + port + "/" + dbName;
 
         System.out.println("Опит за свързване към: " + url);
+
+        if (dbName == null) {
+            System.err.println("Липсва .env файл или конфигурация!");
+            System.err.println("Моля, копирайте .env.example към .env и попълнете данните.");
+            System.exit(1);
+        }
 
         DatabaseManager dbManager = new DatabaseManager(url, user, password);
 
