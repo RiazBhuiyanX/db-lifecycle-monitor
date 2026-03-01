@@ -1,10 +1,15 @@
 package bg.riaz;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.DriverManager;
 
 public class DatabaseManager {
+    private static final Logger logger = LoggerFactory.getLogger(DatabaseManager.class);
+
     private final String url;
     private final String user;
     private final String password;
@@ -18,7 +23,7 @@ public class DatabaseManager {
     public void performFullCheck() {
         try (Connection conn = DriverManager.getConnection(url, user, password)) {
             if (conn != null) {
-                System.out.println("Успешно свързване с Docker Postgres!");
+                logger.info("Успешно свързване с Docker Postgres!");
 
                 initializeDatabase(conn);
 
@@ -28,7 +33,7 @@ public class DatabaseManager {
                 saveHeartbeat(conn, currentUsers, currentVersion);
             }
         } catch (SQLException e) {
-            System.err.println("Грешка при свързване: " + e.getMessage());
+            logger.error("Грешка при свързване: ", e);
         }
     }
 
@@ -40,11 +45,11 @@ public class DatabaseManager {
 
             if (rs.next()) {
                 String version = rs.getString(1);
-                System.out.println("Версия: " + version);
+                logger.info("Версия: {}", version);
                 return version;
             }
         } catch (SQLException e) {
-            System.err.println("Проблем при проверката: " + e.getMessage());
+            logger.error("Проблем при проверката на версията: ", e);
         }
         return "Unknown Version";
     }
@@ -58,11 +63,11 @@ public class DatabaseManager {
 
             if (rs.next()) {
                 int count = rs.getInt(1);
-                System.out.println("Брой: " + count);
+                logger.info("Брой: {}", count);
                 return count;
             }
         } catch (SQLException e) {
-            System.err.println("Проблем при проверката: " + e.getMessage());
+            logger.error("Проблем при проверката на броя user-и: ", e);
         }
         return 0;
     }
@@ -81,9 +86,9 @@ public class DatabaseManager {
 
         try (var stmt = conn.createStatement()) {
             stmt.executeUpdate(sql);
-            System.out.println("Инфраструктурата е подготвена: Таблица 'heartbeats' е готова.");
+            logger.info("Инфраструктурата е подготвена: Таблица 'heartbeats' е готова.");
         } catch (SQLException e) {
-            System.err.println("Грешка при подготовка на базата: " + e.getMessage());
+            logger.error("Грешка при подготовка на базата: ", e);
         }
     }
 
@@ -96,9 +101,9 @@ public class DatabaseManager {
             pstmt.setString(3, "Healthy");
 
             pstmt.executeUpdate();
-            System.out.println("Успешен запис в историята на базата данни!");
+            logger.info("Успешен запис в историята на базата данни!");
         } catch (SQLException e) {
-            System.err.println("Грешка при запис: " + e.getMessage());
+            logger.error("Грешка при запис: ", e);
         }
     }
 }
