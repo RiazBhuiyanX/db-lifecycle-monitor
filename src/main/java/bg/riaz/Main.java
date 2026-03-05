@@ -18,8 +18,9 @@ public class Main {
         String password = dotenv.get("POSTGRES_PASSWORD");
         String dbName = dotenv.get("POSTGRES_DB");
         String port = dotenv.get("POSTGRES_PORT");
+        String host = dotenv.get("POSTGRES_HOST");
 
-        String url = "jdbc:postgresql://localhost:" + port + "/" + dbName;
+        String url = "jdbc:postgresql://" + host + ":" + port + "/" + dbName;
 
         logger.info("Опит за свързване към: {}", url);
 

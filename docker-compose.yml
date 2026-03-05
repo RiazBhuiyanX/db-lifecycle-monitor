@@ -2,14 +2,42 @@ services:
   db:
     image: postgres:16
     container_name: sentinel-db
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
+      interval: 10s
+      timeout: 5s
+      retries: 3
     environment:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: ${POSTGRES_DB}
     ports:
-      - "${POSTGRES_PORT}:5432"
+      - "5431:5432"
     restart: always
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    networks:
+      - sentinel-network
+
+  sentinel-app:
+    build: .
+    container_name: sentinel-monitor
+    environment:
+      - POSTGRES_HOST=${POSTGRES_HOST}
+      - POSTGRES_PORT=${POSTGRES_PORT}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB}
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: on-failure
+    networks:
+      - sentinel-network
+
+networks:
+  sentinel-network:
+    driver: bridge
+
 volumes:
   postgres_data:
